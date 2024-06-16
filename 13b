@@ -1,89 +1,148 @@
+#include <conio.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <time.h>
 
-#define SIZE 9
+#define WIDTH 20
+#define HEIGHT 20
 
-void print_board(int board[SIZE][SIZE]) {
-    for (int i = 0; i < SIZE; i++) {
-        for (int j = 0; j < SIZE; j++) {
-            printf("%d ", board[i][j]);
-            if ((j + 1) % 3 == 0 && j < 8) {
-                printf("| ");
-            }
-        }
-        printf("\n");
-        if ((i + 1) % 3 == 0 && i < 8) {
-            printf("---------+---------+---------\n");
-        }
-    }
+int score = 0;
+bool gameOver;
+int x, y, fruitX, fruitY, tailX[100], tailY[100];
+int nTail = 0;
+
+enum eDirection { STOP = 0, LEFT, RIGHT, UP, DOWN };
+enum eDirection dir;
+
+void Setup() {
+    gameOver = false;
+    dir = STOP;
+    x = WIDTH / 2;
+    y = HEIGHT / 2;
+    fruitX = rand() % WIDTH;
+    fruitY = rand() % HEIGHT;
+    score = 0;
 }
 
-int is_valid(int board[SIZE][SIZE], int row, int col, int num) {
-    // Check the row
-    for (int i = 0; i < SIZE; i++) {
-        if (board[row][i] == num) {
-            return 0;
-        }
-    }
+void Draw() {
+    system("cls");
+    for (int i = 0; i < WIDTH + 2; i++)
+        printf("#");
+    printf("\n");
 
-    // Check the column
-    for (int i = 0; i < SIZE; i++) {
-        if (board[i][col] == num) {
-            return 0;
-        }
-    }
-
-    // Check the box
-    int start_row = row - row % 3;
-    int start_col = col - col % 3;
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
-            if (board[start_row + i][start_col + j] == num) {
-                return 0;
-            }
-        }
-    }
-
-    return 1;
-}
-
-int solve_sudoku(int board[SIZE][SIZE]) {
-    for (int i = 0; i < SIZE; i++) {
-        for (int j = 0; j < SIZE; j++) {
-            if (board[i][j] == 0) {
-                for (int num = 1; num <= SIZE; num++) {
-                    if (is_valid(board, i, j, num)) {
-                        board[i][j] = num;
-                        if (solve_sudoku(board)) {
-                            return 1;
-                        }
-                        board[i][j] = 0;
+    for (int i = 0; i < HEIGHT; i++) {
+        for (int j = 0; j < WIDTH; j++) {
+            if (j == 0)
+                printf("#");
+            if (i == y && j == x)
+                printf("O");
+            else if (i == fruitY && j == fruitX)
+                printf("F");
+            else {
+                bool printTail = false;
+                for (int k = 0; k < nTail; k++) {
+                    if (tailX[k] == j && tailY[k] == i) {
+                        printf("o");
+                        printTail = true;
                     }
                 }
-                return 0;
+                if (!printTail)
+                    printf(" ");
             }
+
+            if (j == WIDTH - 1)
+                printf("#");
+        }
+        printf("\n");
+    }
+
+    for (int i = 0; i < WIDTH + 2; i++)
+        printf("#");
+    printf("\n");
+    printf("Score:%d", score);
+}
+
+void Input() {
+    if (_kbhit()) {
+        switch (_getch()) {
+            case 'a':
+                dir = LEFT;
+                break;
+            case 'd':
+                dir = RIGHT;
+                break;
+            case 'w':
+                dir = UP;
+                break;
+            case 's':
+                dir = DOWN;
+                break;
+            case 'x':
+                gameOver = true;
+                break;
         }
     }
-    return 1;
+}
+
+void Logic() {
+    int prevX = tailX[0];
+    int prevY = tailY[0];
+    int prev2X, prev2Y;
+    tailX[0] = x;
+    tailY[0] = y;
+    for (int i = 1; i < nTail; i++) {
+        prev2X = tailX[i];
+        prev2Y = tailY[i];
+        tailX[i] = prevX;
+        tailY[i] = prevY;
+        prevX = prev2X;
+        prevY = prev2Y;
+    }
+    switch (dir) {
+        case LEFT:
+            x--;
+            break;
+        case RIGHT:
+            x++;
+            break;
+        case UP:
+            y--;
+            break;
+        case DOWN:
+            y++;
+            break;
+        default:
+            break;
+    }
+
+    if (x >= WIDTH) x = 0;
+    else if (x < 0) x = WIDTH - 1;
+    if (y >= HEIGHT) y = 0;
+    else if (y < 0) y = HEIGHT - 1;
+
+    for (int i = 0; i < nTail; i++) {
+        if (tailX[i] == x && tailY[i] == y)
+            gameOver = true;
+    }
+
+    if (x == fruitX && y == fruitY) {
+        score += 10;
+        fruitX = rand() % WIDTH;
+        fruitY = rand() % HEIGHT;
+        nTail++;
+    }
 }
 
 int main() {
-    int board[SIZE][SIZE] = {
-        {5, 3, 0, 0, 7, 0, 0, 0, 0},
-        {6, 0, 0, 1, 9, 5, 0, 0, 0},
-        {0, 9, 8, 0, 0, 0, 0, 6, 0},
-        {8, 0, 0, 0, 6, 0, 0, 0, 3},
-        {4, 0, 0, 8, 0, 3, 0, 0, 1},
-        {7, 0, 0, 0, 2, 0, 0, 0, 6},
-        {0, 6, 0, 0, 0, 0, 2, 8, 0},
-        {0, 0, 0, 4, 1, 9, 0, 0, 5},
-        {0, 0, 0, 0, 8, 0, 0, 7, 9}
-    };
-
-    if (solve_sudoku(board)) {
-        print_board(board);
-    } else {
-        printf("No solution exists\n");
+    Setup();
+    while (!gameOver) {
+        Draw();
+        Input();
+        Logic();
+        // Slow down the game to make it playable
+        for (int i = 0; i < 10000000; i++) {}
     }
-
     return 0;
 }
+
