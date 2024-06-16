@@ -1,75 +1,59 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
-#define MAX_DESTINATIONS 10
-#define MAX_NAME_LENGTH 50
+// Structure to represent a destination
+struct Destination {
+    char name[50];
+    char date[20];
+};
 
-typedef struct {
-    char name[MAX_NAME_LENGTH];
-    char description[MAX_NAME_LENGTH];
-    int duration; // in days
-} Destination;
+typedef struct Destination Destination;
 
-typedef struct {
-    Destination destinations[MAX_DESTINATIONS];
-    int num_destinations;
-} TravelPlan;
-
-void add_destination(TravelPlan* plan, char* name, char* description, int duration) {
-    if (plan->num_destinations < MAX_DESTINATIONS) {
-        strcpy(plan->destinations[plan->num_destinations].name, name);
-        strcpy(plan->destinations[plan->num_destinations].description, description);
-        plan->destinations[plan->num_destinations].duration = duration;
-        plan->num_destinations++;
-    } else {
-        printf("Travel plan is full. Cannot add more destinations.\n");
-    }
+// Function to add a destination to the travel planner
+void addDestination(Destination destinations[], int* numDestinations) {
+    printf("Enter destination name: ");
+    scanf("%s", destinations[*numDestinations].name);
+    printf("Enter travel date: ");
+    scanf("%s", destinations[*numDestinations].date);
+    (*numDestinations)++;
 }
 
-void display_travel_plan(TravelPlan plan) {
-    printf("Travel Plan:\n");
-    for (int i = 0; i < plan.num_destinations; i++) {
-        printf("Destination %d: %s (%d days)\n", i + 1, plan.destinations[i].name, plan.destinations[i].duration);
-        printf("Description: %s\n", plan.destinations[i].description);
-        printf("\n");
+// Function to display all destinations in the travel planner
+void displayDestinations(Destination destinations[], int numDestinations) {
+    printf("\nDestinations in Travel Planner:\n");
+    for (int i = 0; i < numDestinations; i++) {
+        printf("Destination: %s, Date: %s\n", destinations[i].name, destinations[i].date);
     }
 }
 
 int main() {
-    TravelPlan plan = {{}, 0};
-
+    Destination destinations[100]; // Assuming a maximum of 100 destinations
+    int numDestinations = 0;
     int choice;
-    char name[MAX_NAME_LENGTH];
-    char description[MAX_NAME_LENGTH];
-    int duration;
 
-    while (1) {
-        printf("Travel Planner\n");
+    do {
+        printf("\nTravel Planner Menu:\n");
         printf("1. Add Destination\n");
-        printf("2. Display Travel Plan\n");
+        printf("2. Display Destinations\n");
         printf("3. Exit\n");
         printf("Enter your choice: ");
         scanf("%d", &choice);
 
         switch (choice) {
             case 1:
-                printf("Enter destination name: ");
-                scanf("%s", name);
-                printf("Enter destination description: ");
-                scanf("%s", description);
-                printf("Enter destination duration (in days): ");
-                scanf("%d", &duration);
-                add_destination(&plan, name, description, duration);
+                addDestination(destinations, &numDestinations);
                 break;
             case 2:
-                display_travel_plan(plan);
+                displayDestinations(destinations, numDestinations);
                 break;
             case 3:
-                return 0;
+                printf("Exiting Travel Planner. Have a nice trip!\n");
+                break;
             default:
-                printf("Invalid choice. Please try again.\n");
+                printf("Invalid choice. Please enter a valid option.\n");
         }
-    }
+    } while (choice != 3);
 
     return 0;
 }
